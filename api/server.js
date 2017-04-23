@@ -1,8 +1,11 @@
+process.env.TMPDIR = '.';
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const multiparty = require('connect-multiparty');
 const mongodb = require('mongodb');
 const ObjectID = require('mongodb').ObjectID;
+const fs = require('fs');
 
 var app = express();
 
@@ -30,24 +33,48 @@ app.post('/api', function(req, res) {
     // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:80');
     res.setHeader('Access-Control-Allow-Origin', '*');
 
-    DB.open().then(function(db) {
-        db.collection('postagens', function(err, collection) {
-            collection.insert(req.body)
-                .then(function(records) {
-                    res.json(records);
+    let filename = `${(new Date()).getTime()}-${req.files.arquivo.originalFilename}`;
+
+    let p = new Promise(function(resolve, reject) {
+        let mv = require('mv');
+ 
+        mv(req.files.arquivo.path, `./uploads/${filename}`, function(err) {
+            if(err) {
+                reject(err);
+                return;
+            } 
+            resolve();
+        });        
+    });
+
+    p.then(function() {
+        DB.open().then(function(db) {
+            db.collection('postagens', function(err, collection) {
+                collection.insert({
+                    titulo: req.body.titulo,
+                    url_imagem: filename
+                }).then(function(records) {
+                    res.status(200).json(records);
                 }).catch(function(err) {
-                    res.json(err);
+                    res.status(500).json(err);
                 }).then(function() {
                     console.log('closed');
                     DB.close();
                 });
+            });
+        }).catch(function(err) {
+            res.status(500).json(err);
         });
     }).catch(function(err) {
-        res.json(err);
+        res.status(500).json({error: err});
     });
+        
+
 });
 
 app.get('/api', function(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
     DB.open().then(function(db) {
         db.collection('postagens', function(err, collection) {
             collection.find()
@@ -80,6 +107,20 @@ app.get('/api/:id', function(req, res) {
         });
     }).catch(function(err) {
         res.json(err);
+    });
+});
+
+app.get('/media/:imagem', function(req, res) {
+    fs.readFile(`./uploads/${req.params.imagem}`, function(err, content) {
+        if(err) {
+            res.status(404).json(err);
+            return;
+        }
+        // res.setHeader('Content-type', 'image/jpeg');
+        res.writeHead(200, {
+            'Content-type': 'image/jpg'
+        });
+        res.end(content);
     });
 });
 

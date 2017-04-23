@@ -16,6 +16,30 @@
 
 		<script>
 			$(document).ready(function(){
+				function carrega_postagens() {
+					let xhr = new XMLHttpRequest();
+					xhr.open('GET', 'http://localhost:8080/api');
+					xhr.onload = function () {
+						if(xhr.status === 200) {
+							let data = JSON.parse(xhr.responseText);
+							console.log(data);
+							$('#container_timeline').append (
+								data.map(function(d) {
+									return `<div class="publicacao">
+												<span class="titulo">${d.titulo}</span>
+												<img src="http://localhost:8080/media/${d.url_imagem}">
+												<div class="comentar">
+													<input type="text" class="form-control input_comentario" placeholder="Adicione um comentário">
+													<button type="button" class="btn btn-default btn_postagem">Comentar</button>
+												</div>
+											</div>`;
+								}).join('')
+							);
+						}
+					}
+					xhr.send();
+				}
+				carrega_postagens();
 
 				$('#btn_incluir').click(function(){
 					$('#container_timeline').hide();
