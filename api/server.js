@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const multiparty = require('connect-multiparty');
 const mongodb = require('mongodb');
 const ObjectID = require('mongodb').ObjectID;
 
@@ -7,6 +8,7 @@ var app = express();
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
+app.use(multiparty());
 
 const port = 8080;
 
@@ -25,6 +27,9 @@ app.get('/', function(req, res){
 });
 
 app.post('/api', function(req, res) {
+    // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:80');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
     DB.open().then(function(db) {
         db.collection('postagens', function(err, collection) {
             collection.insert(req.body)

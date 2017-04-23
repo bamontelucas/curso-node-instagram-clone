@@ -28,6 +28,24 @@
 					return false;
 				});
 
+				$('#btn-publicar').on('click', function() {
+					let data = new FormData();
+					let arquivo = document.querySelector('#arquivo').files[0];
+					let titulo = document.querySelector('#titulo').value;
+					data.append('arquivo', arquivo);
+					data.append('titulo', titulo);
+
+					let xhr = new XMLHttpRequest();
+
+					xhr.onreadystatechange = function() {
+						if(xhr.readyState === 4) {
+							document.querySelector('#mensagem').textContent = xhr.responseText;
+						}
+					};
+
+					xhr.open('POST', 'http://localhost:8080/api');
+					xhr.send(data);
+				});
 			});
 		</script>
 
