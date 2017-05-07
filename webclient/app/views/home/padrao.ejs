@@ -29,12 +29,29 @@
 												<span class="titulo">${d.titulo}</span>
 												<img src="http://localhost:8080/media/${d.url_imagem}">
 												<div class="comentar">
-													<input type="text" class="form-control input_comentario" placeholder="Adicione um comentário">
-													<button type="button" class="btn btn-default btn_postagem">Comentar</button>
+													<input type="text" id="postagem_${d._id}" class="form-control input_comentario" placeholder="Adicione um comentário">
+													<button type="button" class="btn btn-default btn_postagem" value="${d._id}">Comentar</button>
 												</div>
 											</div>`;
 								}).join('')
 							);
+
+							$('.btn_postagem').click(function() {
+								let comentario = $(`#postagem_${this.value}`).val();
+								
+								let xhr = new XMLHttpRequest();
+								xhr.open('PUT', `http://localhost:8080/api/${this.value}`);
+								xhr.setRequestHeader('Content-type', 'application/json');
+
+								xhr.onload = function() {
+									if(xhr.status === 200) {
+										window.location.reload();
+									}
+								}
+								xhr.onerror = console.error;
+
+								xhr.send(JSON.stringify({comentario}));
+							});
 						}
 					}
 					xhr.send();

@@ -12,6 +12,14 @@ var app = express();
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use(multiparty());
+app.use(function(req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    next();
+});
 
 const port = 8080;
 
@@ -30,9 +38,6 @@ app.get('/', function(req, res){
 });
 
 app.post('/api', function(req, res) {
-    // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:80');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-
     let filename = `${(new Date()).getTime()}-${req.files.arquivo.originalFilename}`;
 
     let p = new Promise(function(resolve, reject) {
@@ -73,8 +78,6 @@ app.post('/api', function(req, res) {
 });
 
 app.get('/api', function(req, res) {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-
     DB.open().then(function(db) {
         db.collection('postagens', function(err, collection) {
             collection.find()
@@ -130,8 +133,11 @@ app.put('/api/:id', function(req, res) {
             collection.update({
                 _id: ObjectID(req.params.id)
             }, {
-                $set: {
-                    titulo: req.body.titulo
+                $push: {
+                    comentarios: {
+                        id_comentario: new ObjectID(),
+                        comentario: req.body.comentario
+                    }
                 }
             }).then(function(records) {
                 res.json(records);
